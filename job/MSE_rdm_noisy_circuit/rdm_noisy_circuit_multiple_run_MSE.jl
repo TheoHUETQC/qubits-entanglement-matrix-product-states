@@ -37,18 +37,18 @@ mkpath(path)
 i = 2
 
 # qubits list
-Ns = [7, 9, 11]
+Ns = [7, 9]
 
 # Gamma list = lambda_list/Nqubits
-lambda_list = 0:0.05:0.4
+lambda_list = 0:0.03:0.4
 
-normalize = true
+normalize = false
 
 for nqubits in Ns
   nlayers = nqubits
 
   power_list = (nqubits-5):(nqubits-1)
-  maxdim_list = 4 .^ (power_list)
+  maxdim_list = 2 .^ (power_list)
   maxsize_list = 4 .^(power_list)
   println("------------- nqubits=$nqubits -------------")
   # define the circuit
@@ -71,12 +71,8 @@ for nqubits in Ns
   Z_i_mpo = MPO(circuit_rdm["sites"], ops)
 
   # --- PROPAGATION ---
-  maxdim_list_for_csv = copy(maxdim_list)
-  maxsize_list_for_csv = copy(maxsize_list)
-  push!(maxdim_list_for_csv, 4^nqubits)
-  push!(maxsize_list_for_csv, 4^nqubits)
-  error_mpo_dict = Dict("N_qubits" => nqubits, "maxdim" => maxdim_list_for_csv)
-  error_pp_dict = Dict("N_qubits" => nqubits, "maxsize" => maxsize_list_for_csv)
+  error_mpo_dict = Dict("N_qubits" => nqubits, "nlayer" => 0:(nlayers*2))
+  error_pp_dict = Dict("N_qubits" => nqubits, "nlayer" => 0:(nlayers*2))
 
   for lambda in lambda_list
     gamma = lambda/nqubits
@@ -97,17 +93,11 @@ for nqubits in Ns
       Z_it_mpo, result_mpo = mpo.propagate_layerbylayer(circuit_rdm["mpo"], Z_i_mpo; maxdim, ψ0=ψ0_mps, γ=gamma, normalize)
 
       # --- Save Data ---
-      push!(error_pp_list, @. abs(overlap_exact - result_pp["overlap"])^2)
-      push!(error_mpo_list, @. abs(overlap_exact - result_mpo["overlap"])^2)
-      push!(exact_value_sq, overlap_exact.^2)
+      error_pp_dict["sq error, gammaN=$lambda, maxsize=$max_size"] = @. abs(overlap_exact - result_pp["overlap"])^2
+      error_mpo_dict["sq error, gammaN=$lambda, maxdim=$maxdim"] = @. abs(overlap_exact - result_mpo["overlap"])^2
     end
-    push!(error_pp_list, @. abs(overlap_exact - overlap_exact)^2)
-    push!(error_mpo_list, @. abs(overlap_exact - overlap_exact)^2)
-
-    error_mpo_dict["sq error, gammaN=$lambda"] = error_mpo_list
-    error_pp_dict["sq error, gammaN=$lambda"] = error_pp_list
-    error_pp_dict["exact value sq, gammaN=$lambda"] = exact_value_sq # pour l'erreur relative
-    error_mpo_dict["exact value sq, gammaN=$lambda"] = exact_value_sq
+    error_pp_dict["exact value sq, gammaN=$lambda"] = overlap_exact.^2 # pour l'erreur relative
+    error_mpo_dict["exact value sq, gammaN=$lambda"] = overlap_exact.^2
   end
 
   # --- Save Data ---

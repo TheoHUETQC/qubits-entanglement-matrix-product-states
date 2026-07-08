@@ -19,30 +19,29 @@ save_dir = 'figures'
 os.makedirs(save_dir, exist_ok=True) # Create the directory if it doesn't exist
 
 # --- Paramètres ---
-nqubits_list = [7, 9]
-lambda_list = np.arange(0, 0.4 + 0.05, 0.05)
-runs = range(10)
+nqubits_list = [7]
+lambda_list = np.arange(0, 0.4, 0.03)
+runs = range(50)
 
 def compute_maxdim_list(nqubits):
-  power_list = np.array(range(nqubits-5, nqubits + 1))
-  return 4 ** (power_list)
+  power_list = np.array(range(nqubits-5, nqubits))
+  return 2 ** (power_list)
 
 def compute_maxsize_list(nqubits):
-  power_list = np.array(range(nqubits-5, nqubits-2 + 1))
+  power_list = np.array(range(nqubits-5, nqubits))
   return 4 ** (power_list)
 
 def compute_thermalisation(nlayers):
-  return nlayers//4
+  return -1
 
-def get_data(run, nqubits, method_type, lambda_val, truncation_idx):
+def get_data(run, nqubits, method_type, col_name):
   """Récupère la colonne spécifique du CSV
   method_type = "pp" or "mpo"
   """
-  col_name = f"sq error, gammaN={lambda_val:.1f}"
 
-  path = f"/content/drive/MyDrive/resultat_simu_osaka/random_circuit_noisy_MSE/run_{run}/results_N_{nqubits}-MSE_{method_type}.csv"
+  path = f"/content/drive/MyDrive/resultat_simu_osaka/random_circuit_noisy_MSE/test/run_{run}/results_N_{nqubits}-MSE_{method_type}.csv"
   df = pd.read_csv(path)
-  return df[col_name][truncation_idx]
+  return df[col_name]
 
 # --- Calcul et Plot ---
 for nqubits in nqubits_list:
@@ -56,16 +55,22 @@ for nqubits in nqubits_list:
     cmap = plt.get_cmap('viridis')
     norm = Normalize(vmin=lambda_list.min(), vmax=lambda_list.max())
     for lambda_val in lambda_list:
+      lambda_val = round(lambda_val, 2)
+
       pp_mse_vs_truncation_means, mpo_mse_vs_truncation_means = [], []
       pp_mse_vs_truncation_errs, mpo_mse_vs_truncation_errs  = [], []
-      
+
       for truncation_idx in range(len(maxsize_list)):
         # recupere la data sur les runs
         all_run_pp_mse = []
         all_run_mpo_mse = []
         for r in runs:
-          pp_mse = np.mean(convert_to_list(get_data(r+1, nqubits, "pp", lambda_val, truncation_idx))[thermalisation:])
-          mpo_mse = np.mean(convert_to_list(get_data(r+1, nqubits, "mpo", lambda_val, truncation_idx))[thermalisation:])
+          exact_value_sq = np.mean(get_data(r+1, nqubits, "pp", f"exact value sq, gammaN={lambda_val}")[thermalisation:])
+
+          col_name_mpo = f"sq error, gammaN={lambda_val}, maxdim={maxdim_list[truncation_idx]}"
+          col_name_pp = f"sq error, gammaN={lambda_val}, maxsize={maxsize_list[truncation_idx]}"
+          pp_mse = np.mean(get_data(r+1, nqubits, "pp", col_name_pp)[thermalisation:])
+          mpo_mse = np.mean(get_data(r+1, nqubits, "mpo", col_name_mpo)[thermalisation:])
 
           all_run_pp_mse.append(pp_mse)
           all_run_mpo_mse.append(mpo_mse)
@@ -83,6 +88,8 @@ for nqubits in nqubits_list:
         mpo_mse_vs_truncation_errs.append(mpo_mse_errs)
       # Plot
       color = cmap(norm(lambda_val))
+      if lambda_val == 0.21:
+        color = "red"
       axes[0].errorbar(np.array(maxsize_list)/(4**nqubits), pp_mse_vs_truncation_means, yerr=pp_mse_vs_truncation_errs, marker='o', label=f"λ={lambda_val:.2f}", capsize=3, color=color)
       axes[1].errorbar(np.array(maxdim_list)/(2**nqubits), mpo_mse_vs_truncation_means, yerr=mpo_mse_vs_truncation_errs, marker='s', capsize=3, color=color)
 
@@ -94,7 +101,7 @@ for nqubits in nqubits_list:
         ax.set_ylabel("MSE")
         ax.grid(True, linestyle='--', alpha=0.6)
         ax.set_xscale('log')
-        ax.set_yscale('log')
+        #ax.set_yscale('log')
 
     sm = ScalarMappable(cmap=cmap, norm=norm)
     cbar = fig.colorbar(sm, ax=axes, pad=0.02)
