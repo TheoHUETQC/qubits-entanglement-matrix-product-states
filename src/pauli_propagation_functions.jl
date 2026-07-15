@@ -342,7 +342,7 @@ function propagate_1layer(
 
   ### Notes
 
-  This function propagates the observable using `propagate`, applies a depolarizing noise layer if `γ > 0`, and renormalizes the observable such that the sum of the squared coefficients equals 1.
+  This function propagates the observable using `propagate` in the PauliPropagation package, applies a depolarizing noise layer if `γ > 0`, and renormalizes the observable such that the sum of the squared coefficients equals 1.
   """
   if typeof(current) <: PauliString{<:Unsigned, Float64}
     current = PauliSum(current)
@@ -352,7 +352,7 @@ function propagate_1layer(
     max_weight = current.nqubits 
   end
 
-  current = propagate(layer_gates, current, parameter; max_weight, min_abs_coeff)
+  current = PauliPropagation.propagate(layer_gates, current, parameter; max_weight, min_abs_coeff)
 
   if max_size !== nothing
     truncate_max_size!(current, max_size)
@@ -367,7 +367,7 @@ function propagate_1layer(
   return current
 end
 
-function propagate_layerbylayer(
+function propagate(
   circuit::Union{Gate, Vector{Gate}}, 
   observable::Union{PauliSum, PauliString}, 
   nlayers::Int64, 
@@ -382,7 +382,7 @@ function propagate_layerbylayer(
   disable_print::Bool=false
   )::Tuple{PauliSum, Dict{String, Any}}
   raw"""
-  propagate_layerbylayer(circuit::Union{Gate, Vector{Gate}}, observable::Union{PauliSum, PauliString}, nlayers::Int64, parameters::Union{Vector{Float64}, Nothing}=nothing; max_weight::Union{Integer, Nothing}=nothing, min_abs_coeff::Float64=0.0, k::Union{Int64, Nothing}=nothing, ψ0::Union{Vector{Float64}, Nothing}=nothing, γ::Float64=0.0, disable_print::Bool=false)::Tuple{PauliSum, Dict{String, Any}}
+  propagate(circuit::Union{Gate, Vector{Gate}}, observable::Union{PauliSum, PauliString}, nlayers::Int64, parameters::Union{Vector{Float64}, Nothing}=nothing; max_weight::Union{Integer, Nothing}=nothing, min_abs_coeff::Float64=0.0, k::Union{Int64, Nothing}=nothing, ψ0::Union{Vector{Float64}, Nothing}=nothing, γ::Float64=0.0, disable_print::Bool=false)::Tuple{PauliSum, Dict{String, Any}}
 
   Propagate a Pauli observable through a quantum circuit layer-by-layer in the Heisenberg picture.
 
@@ -444,7 +444,7 @@ function propagate_layerbylayer(
   end
 
   elapsed_time = time() - t
-  println("Time taken by pp.propagate_layerbylayer: ", elapsed_time, " seconds")
+  println("Time taken by pauli_propagation_functions.propagate: ", elapsed_time, " seconds")
 
   result = Dict("norm" => norm, "overlap" => overlaps, "S" => entropy, "time" => elapsed_time)
  

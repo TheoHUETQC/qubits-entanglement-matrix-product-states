@@ -103,7 +103,7 @@ function apply_depolarizing_noise(
 end
 
 #------------ Propagate Layer by layer ------------ 
-function propagate_layerbylayer(    
+function propagate(    
     circuit::Vector{Vector{Matrix}},
     observable::Matrix;
     bond::Union{Int, Nothing}=nothing,
@@ -113,7 +113,7 @@ function propagate_layerbylayer(
     disable_print::Bool=false
     )::Tuple{Matrix, Dict{String, Any}}
     raw"""
-    propagate_layerbylayer(circuit::Vector{Vector{Matrix}}, observable::Matrix; bond::Union{Int, Nothing}=nothing, ψ0::Union{Vector{Float64}, Nothing}=nothing, disable_print::Bool=false)::Tuple{Matrix, Dict{String, Any}}
+    propagate(circuit::Vector{Vector{Matrix}}, observable::Matrix; bond::Union{Int, Nothing}=nothing, ψ0::Union{Vector{Float64}, Nothing}=nothing, disable_print::Bool=false)::Tuple{Matrix, Dict{String, Any}}
 
     Propagate a dense matrix observable through a quantum circuit layer-by-layer in the Heisenberg picture.
 
@@ -177,7 +177,7 @@ function propagate_layerbylayer(
     end
 
     elapsed_time = time() - t
-    println("Time taken by ext.propagate_layerbylayer: ", elapsed_time, " seconds")
+    println("Time taken by exact_functions.propagate: ", elapsed_time, " seconds")
 
     result = Dict("norm" => norms, "S" => entropies, "overlap" => overlaps, "time" => elapsed_time)
 

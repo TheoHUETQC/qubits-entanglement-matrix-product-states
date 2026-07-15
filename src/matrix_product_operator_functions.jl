@@ -271,7 +271,7 @@ function propagate_1layer(
   return current
 end
 
-function propagate_layerbylayer(
+function propagate(
   circuit::Vector{Vector{ITensor}},
   observable::MPO;
   cutoff::Float64=0.,
@@ -284,7 +284,7 @@ function propagate_layerbylayer(
   disable_print::Bool=false
   )::Tuple{MPO, Dict{String, Any}}
   raw"""
-  propagate_layerbylayer(circuit::Vector{Vector{ITensor}}, observable::MPO; cutoff::Float64=0.0, maxdim::Union{Int, Nothing}=nothing, bond::Union{Int, Nothing}=nothing, k::Int64=1, ψ0::Union{MPS, Nothing}=nothing, γ::Float64=0.0, disable_print::Bool=false)::Tuple{MPO, Dict{String, Any}}
+  propagate(circuit::Vector{Vector{ITensor}}, observable::MPO; cutoff::Float64=0.0, maxdim::Union{Int, Nothing}=nothing, bond::Union{Int, Nothing}=nothing, k::Int64=1, ψ0::Union{MPS, Nothing}=nothing, γ::Float64=0.0, disable_print::Bool=false)::Tuple{MPO, Dict{String, Any}}
 
   Propagate an MPO observable through a quantum circuit layer-by-layer in the Heisenberg picture.
 
@@ -353,7 +353,7 @@ function propagate_layerbylayer(
   end
 
   elapsed_time = time() - t0
-  println("Time taken by mpo_functions.propagate_layerbylayer: ", elapsed_time, " seconds")
+  println("Time taken by mpo_functions.propagate: ", elapsed_time, " seconds")
 
   result = Dict("maxlink" => maxlink, "norm" => norms, "S" => entropies, "overlap" => overlaps, "time"=> elapsed_time)
 
